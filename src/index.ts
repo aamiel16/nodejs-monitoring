@@ -1,5 +1,6 @@
 import { STATUS_CODES } from "http";
-import express, { Response } from "express";
+import express, { Request, Response } from "express";
+import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import client from "prom-client";
@@ -11,14 +12,20 @@ const PORT = +(process.env.PORT || 8080);
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
 
+// Settings
+server.set('trust proxy', 1);
+server.disable("x-powered-by");
+
+// Middlewares
+server.use(helmet());
 server.use(cors());
 server.use(morgan("combined"));
 
-server.get("/heartbeat", (_, res: Response) => {
+server.get("/heartbeat", (_: Request, res: Response) => {
   res.status(200).send(STATUS_CODES[200]);
 });
 
-server.get("/metrics", (_, res: Response) => {
+server.get("/metrics", (_: Request, res: Response) => {
   res.contentType(register.contentType);
   res.end(register.metrics());
 });
